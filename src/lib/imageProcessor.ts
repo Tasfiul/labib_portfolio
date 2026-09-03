@@ -1,6 +1,8 @@
 import sharp from "sharp";
-import path from "path";
-import fs from "fs/promises";
+import mongoose from "mongoose";
+import { connectDB } from "@/lib/db";
+import { GridFSBucket } from "mongodb";
+import { Readable } from "stream";
 
 export interface ProcessedImageResult {
   url: string;
@@ -11,48 +13,68 @@ export interface ProcessedImageResult {
   size: number;
 }
 
+function getGridFSBucket(): GridFSBucket {
+  const db = mongoose.connection.db;
+  if (!db) throw new Error("MongoDB not connected");
+  return new GridFSBucket(db, { bucketName: "uploads" });
+}
+
+async function uploadToGridFS(
+  buffer: Buffer,
+  filename: string,
+  contentType: string
+): Promise<void> {
+  const bucket = getGridFSBucket();
+
+  // Delete any existing file with the same name to avoid duplicates
+  const existing = await bucket.find({ filename }).toArray();
+  for (const file of existing) {
+    await bucket.delete(file._id);
+  }
+
+  return new Promise((resolve, reject) => {
+    const readable = Readable.from(buffer);
+    const uploadStream = bucket.openUploadStream(filename, {
+      metadata: { contentType, uploadedAt: new Date().toISOString() },
+    });
+    readable.pipe(uploadStream);
+    uploadStream.on("finish", resolve);
+    uploadStream.on("error", reject);
+  });
+}
+
 export async function processAndSaveImage(
   buffer: Buffer,
   originalFilename: string
 ): Promise<ProcessedImageResult> {
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
+  await connectDB();
 
-  // Ensure upload directory exists
-  try {
-    await fs.mkdir(uploadDir, { recursive: true });
-  } catch {
-    // directory exists
-  }
-
-  const cleanName = path
+  const cleanName = require("path")
     .parse(originalFilename)
     .name.replace(/[^a-zA-Z0-9_-]/g, "_")
     .toLowerCase()
     .slice(0, 40);
   const timestamp = Date.now();
-  const ext = path.extname(originalFilename).toLowerCase();
+  const ext = require("path").extname(originalFilename).toLowerCase();
 
-  // SVG handling
+  // SVG handling — store as-is
   if (ext === ".svg") {
     const filename = `${cleanName}-${timestamp}.svg`;
-    const filepath = path.join(uploadDir, filename);
-    await fs.writeFile(filepath, buffer);
+    await uploadToGridFS(buffer, filename, "image/svg+xml");
     return {
-      url: `/uploads/${filename}`,
+      url: `/api/image/${filename}`,
       filename,
       format: "svg",
       size: buffer.length,
     };
   }
 
-  // Optimize and convert to pristine high-quality WebP using Sharp
+  // Optimize and convert to high-quality WebP using Sharp
   const sharpInstance = sharp(buffer);
   const metadata = await sharpInstance.metadata();
 
   const filename = `${cleanName}-${timestamp}.webp`;
-  const filepath = path.join(uploadDir, filename);
 
-  // Use Sharp with near-lossless / high quality 95+ to preserve maximum clarity and crispness
   const processedBuffer = await sharpInstance
     .webp({
       quality: 95,
@@ -62,10 +84,10 @@ export async function processAndSaveImage(
     })
     .toBuffer();
 
-  await fs.writeFile(filepath, processedBuffer);
+  await uploadToGridFS(processedBuffer, filename, "image/webp");
 
   return {
-    url: `/uploads/${filename}`,
+    url: `/api/image/${filename}`,
     filename,
     width: metadata.width,
     height: metadata.height,
