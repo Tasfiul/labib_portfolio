@@ -1,69 +1,198 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { ProfileData } from "@/types";
+import InteractiveText from "@/components/InteractiveText";
+import ImageModal from "@/components/ImageModal";
+import PageTransition from "@/components/PageTransition";
+import {
+  ArrowRight,
+  FileText,
+  Sparkles,
+  ExternalLink,
+  GraduationCap,
+  Award,
+  Layers,
+  BookOpen,
+} from "lucide-react";
+
+export default function HomePage() {
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then((data) => {
+        setProfile(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load profile", err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-3 border-[#086972] dark:border-[#68b6c4] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs text-[#768d97] font-mono">Loading profile...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) return null;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <PageTransition>
+      <div className="relative overflow-hidden">
+        {/* Subtle background ambient gradients */}
+        <div className="absolute top-10 left-1/4 -z-10 w-96 h-96 bg-[#086972]/10 dark:bg-[#68b6c4]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-10 -z-10 w-96 h-96 bg-[#68b6c4]/10 dark:bg-[#086972]/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+            {/* Left Column: Text & Intro */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Natural Editorial Titles (No AI-like background capsule boxes) */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm sm:text-base font-semibold text-[#086972] dark:text-[#68b6c4]">
+                {profile.titles.map((title, idx) => (
+                  <React.Fragment key={idx}>
+                    <span>{title}</span>
+                    {idx < profile.titles.length - 1 && (
+                      <span className="text-[#cbd7dc] dark:text-[#2f4450] select-none font-normal">/</span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+
+              {/* Main Headline */}
+              <div className="space-y-3">
+                <p className="text-xs sm:text-sm font-bold tracking-widest uppercase text-[#768d97] dark:text-[#9bb0bb]">
+                  Welcome to my research portfolio
+                </p>
+                <h1 className="text-4xl sm:text-6xl xl:text-7xl font-extrabold tracking-tight text-[#1c2830] dark:text-white leading-[1.12]">
+                  Hello, I&apos;m{" "}
+                  <span className="text-[#086972] dark:text-[#68b6c4]">
+                    {profile.name}
+                  </span>
+                </h1>
+              </div>
+
+              {/* Bio with Natural Inline Editorial Copy */}
+              <div className="text-lg sm:text-xl text-[#1c2830] dark:text-[#edf1f2] leading-relaxed font-normal text-justify">
+                <InteractiveText
+                  text={profile.bio}
+                  highlights={profile.highlights}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-4 pt-3">
+                <Link
+                  href="/resume"
+                  className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl text-base font-semibold bg-[#086972] hover:bg-[#06535a] dark:bg-[#68b6c4] dark:hover:bg-[#85c8d4] text-white dark:text-[#121a20] shadow-md shadow-[#086972]/15 dark:shadow-[#68b6c4]/15 transition-all duration-200 transform hover:-translate-y-0.5"
+                >
+                  <span>View Resume</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+
+                <Link
+                  href="/projects"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-base font-semibold bg-white dark:bg-[#18242b] border border-[#d6e2e6] dark:border-[#243640] text-[#1c2830] dark:text-[#f0f4f5] hover:bg-[#edf1f2] dark:hover:bg-[#1e2d36] transition-all duration-200"
+                >
+                  <span>Projects</span>
+                </Link>
+
+                <Link
+                  href="/publications"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-base font-semibold bg-white dark:bg-[#18242b] border border-[#d6e2e6] dark:border-[#243640] text-[#1c2830] dark:text-[#f0f4f5] hover:bg-[#edf1f2] dark:hover:bg-[#1e2d36] transition-all duration-200"
+                >
+                  <span>Publications</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Column: Hero Portrait with Animated Orbit Ring */}
+            <div className="lg:col-span-5 flex flex-col items-center justify-center">
+              <div className="relative flex items-center justify-center w-72 h-72 sm:w-88 sm:h-88 lg:w-96 lg:h-96">
+                {/* Outer Orbit Rings */}
+                <div className="absolute inset-0 rounded-full border border-dashed border-[#086972]/30 dark:border-[#68b6c4]/30 animate-orbit pointer-events-none" />
+                <div className="absolute inset-4 rounded-full border border-dotted border-[#68b6c4]/20 animate-orbit-reverse pointer-events-none" />
+
+                {/* Ambient glow */}
+                <div className="absolute inset-8 rounded-full bg-[#086972]/10 dark:bg-[#68b6c4]/15 blur-2xl pointer-events-none animate-pulse-glow" />
+
+                {/* Avatar Portrait Card */}
+                <div
+                  className="relative w-64 h-64 sm:w-76 sm:h-76 rounded-full overflow-hidden border-2 border-[#086972]/50 dark:border-[#68b6c4]/60 shadow-2xl shadow-black/10 cursor-pointer group bg-[#18242b]"
+                  onClick={() => setAvatarModalOpen(true)}
+                  title="Click to view full-size portrait"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile.name}
+                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
+                  {/* Hover prompt overlay */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold backdrop-blur-[2px]">
+                    <span className="bg-[#121a20]/90 px-3.5 py-2 rounded-full border border-[#243640] flex items-center gap-1.5 shadow-lg">
+                      <ExternalLink className="w-3.5 h-3.5 text-[#68b6c4]" />
+                      View Full Size
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Citation info below avatar */}
+              {profile.currentCitations !== undefined && (
+                <div className="mt-6 inline-flex items-center gap-2 text-sm font-mono text-[#4a606a] dark:text-[#9bb0bb]">
+                  <span>
+                    Google Scholar Citations:{" "}
+                    <strong className="text-[#086972] dark:text-[#68b6c4] font-bold">
+                      {profile.currentCitations}+
+                    </strong>
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Stats Grid */}
+          {profile.stats && profile.stats.length > 0 && (
+            <div className="mt-16 sm:mt-24 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+              {profile.stats.map((stat, idx) => (
+                <div
+                  key={idx}
+                  className="text-center"
+                >
+                  <p className="text-4xl sm:text-5xl font-extrabold text-[#086972] dark:text-[#68b6c4]">
+                    {stat.value}
+                  </p>
+                  <p className="text-sm font-semibold text-[#768d97] dark:text-[#9bb0bb] mt-1.5 uppercase tracking-wider">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Full-size Avatar Modal */}
+        <ImageModal
+          isOpen={avatarModalOpen}
+          src={profile.avatarUrl}
+          alt={`${profile.name} Portrait`}
+          caption={`${profile.name} - ${profile.tagline}`}
+          onClose={() => setAvatarModalOpen(false)}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+    </PageTransition>
   );
 }

@@ -1,26 +1,149 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg-page: #f4f6f5;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #edf1f2;
+    --bg-card: #ffffff;
+    --border-color: #d6e2e6;
+    --border-subtle: #cbd7dc;
+    --text-main: #1c2830;
+    --text-muted: #4a606a;
+    --text-faint: #768d97;
+    --accent: #086972;
+    --accent-hover: #06535a;
+    --accent-cyan: #3a97a7;
+    --accent-glow: rgba(8, 105, 114, 0.15);
+  }
+
+  .dark {
+    --bg-page: #121a20;
+    --bg-surface: #18242b;
+    --bg-surface-elevated: #1e2d36;
+    --bg-card: #19262e;
+    --border-color: #243640;
+    --border-subtle: #2f4450;
+    --text-main: #f0f4f5;
+    --text-muted: #9bb0bb;
+    --text-faint: #657e8c;
+    --accent: #68b6c4;
+    --accent-hover: #85c8d4;
+    --accent-teal: #086972;
+    --accent-glow: rgba(104, 182, 196, 0.2);
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  font-family: var(--font-inter), "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  overflow-x: hidden;
+  font-size: 16px;
+  line-height: 1.65;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Text justification utility */
+.text-justify, p {
+  text-justify: inter-word;
+  hyphens: auto;
+}
+
+/* Custom modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd7dc;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #2f4450;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Scrollable container custom scrollbar */
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd7dc transparent;
+}
+
+.dark .custom-scroll {
+  scrollbar-color: #2f4450 transparent;
+}
+
+/* Subtle glowing accent elements */
+.glow-accent {
+  box-shadow: 0 0 25px var(--accent-glow);
+}
+
+.glow-border {
+  border-color: var(--accent);
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(24, 36, 43, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.light .glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Clean animated radar/orbit rings for portrait */
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinReverseSlow {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-orbit {
+  animation: spinSlow 28s linear infinite;
+}
+
+.animate-orbit-reverse {
+  animation: spinReverseSlow 36s linear infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.03);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
 }
