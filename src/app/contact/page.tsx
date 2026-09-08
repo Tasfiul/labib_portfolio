@@ -62,7 +62,7 @@ export default function ContactPage() {
   return (
     <PageTransition>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
-        {/* Header */}
+          {/* Header */}
         <div className="mb-12 text-center sm:text-left">
           <p className="text-xs font-bold uppercase tracking-widest text-[#086972] dark:text-[#68b6c4]">
             Get in Touch
@@ -71,7 +71,7 @@ export default function ContactPage() {
             Contact & Academic Inquiries
           </h1>
           <p className="text-sm sm:text-base text-[#4a606a] dark:text-[#9bb0bb] mt-2 max-w-2xl">
-            Feel free to reach out for research collaborations, STEM speaking engagements, or engineering consultations.
+            {config?.contactIntro || "Feel free to reach out for research collaborations, STEM speaking engagements, or engineering consultations."}
           </p>
         </div>
 

@@ -179,17 +179,6 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Citation info below avatar */}
-              {profile.currentCitations !== undefined && (
-                <div className="mt-6 inline-flex items-center gap-2 text-sm font-mono text-[#4a606a] dark:text-[#9bb0bb]">
-                  <span>
-                    Google Scholar Citations:{" "}
-                    <strong className="text-[#086972] dark:text-[#68b6c4] font-bold">
-                      {profile.currentCitations}+
-                    </strong>
-                  </span>
-                </div>
-              )}
             </div>
           </div>
 

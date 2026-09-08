@@ -136,6 +136,7 @@ export interface SiteConfig {
   primaryAccent: string; // hex color or accent preset
   googleScholarUrl: string;
   totalPublicationCitations?: string;
+  contactIntro?: string;
   emails: string[];
   phoneNumbers: string[];
   addresses: string[];

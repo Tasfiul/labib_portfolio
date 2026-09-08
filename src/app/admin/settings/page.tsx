@@ -191,7 +191,7 @@ export default function AdminSettingsPage() {
           Site Identity & Scholar Profile
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-[11px] font-mono text-slate-400 uppercase">
               Brand Name / Navbar Logo Text
@@ -215,6 +215,21 @@ export default function AdminSettingsPage() {
                 setConfig({ ...config, googleScholarUrl: e.target.value })
               }
               className="w-full px-3 py-2 rounded-lg border border-slate-800 bg-slate-950 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div className="space-y-1 sm:col-span-2">
+            <label className="text-[11px] font-mono text-slate-400 uppercase">
+              Contact Page Introduction Paragraph
+            </label>
+            <textarea
+              rows={3}
+              value={config.contactIntro || ""}
+              onChange={(e) =>
+                setConfig({ ...config, contactIntro: e.target.value })
+              }
+              placeholder="Feel free to reach out for research collaborations, STEM speaking engagements, or engineering consultations."
+              className="w-full px-3 py-2 rounded-lg border border-slate-800 bg-slate-950 text-white text-xs leading-relaxed focus:outline-none focus:border-emerald-500 resize-y"
             />
           </div>
 

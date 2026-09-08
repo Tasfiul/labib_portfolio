@@ -37,7 +37,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-xs text-[#768d97] dark:text-[#9bb0bb] mt-1">
-              Power Electronics Researcher & CTO @ Edu-Explorer
+              Researcher || Power Electronics & Control System
             </p>
           </div>
 
