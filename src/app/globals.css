@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
+/* Class-based dark mode so the site toggle (not OS preference) drives `dark:` utilities. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
+    color-scheme: light;
     --bg-page: #f4f6f5;
     --bg-surface: #ffffff;
     --bg-surface-elevated: #edf1f2;
@@ -18,6 +22,7 @@
   }
 
   .dark {
+    color-scheme: dark;
     --bg-page: #121a20;
     --bg-surface: #18242b;
     --bg-surface-elevated: #1e2d36;
@@ -95,15 +100,15 @@ body {
 
 /* Glassmorphism helpers */
 .glass-panel {
-  background: rgba(24, 36, 43, 0.85);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.light .glass-panel {
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+.dark .glass-panel {
+  background: rgba(24, 36, 43, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Clean animated radar/orbit rings for portrait */

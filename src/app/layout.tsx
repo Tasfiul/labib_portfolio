@@ -25,8 +25,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} h-full antialiased dark`}
+      className={`${inter.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("portfolio_theme");if(t!=="light"){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}else{document.documentElement.style.colorScheme="light";}}catch(e){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-[#f4f6f5] dark:bg-[#121a20] text-[#1c2830] dark:text-[#f0f4f5] font-sans transition-colors duration-200">
         <CustomCursor />
         <ThemeProvider>

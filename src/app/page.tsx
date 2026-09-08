@@ -121,16 +121,43 @@ export default function HomePage() {
             {/* Right Column: Hero Portrait with Animated Orbit Ring */}
             <div className="lg:col-span-5 flex flex-col items-center justify-center">
               <div className="relative flex items-center justify-center w-72 h-72 sm:w-88 sm:h-88 lg:w-96 lg:h-96">
-                {/* Outer Orbit Rings */}
-                <div className="absolute inset-0 rounded-full border border-dashed border-[#086972]/30 dark:border-[#68b6c4]/30 animate-orbit pointer-events-none" />
-                <div className="absolute inset-4 rounded-full border border-dotted border-[#68b6c4]/20 animate-orbit-reverse pointer-events-none" />
-
                 {/* Ambient glow */}
-                <div className="absolute inset-8 rounded-full bg-[#086972]/10 dark:bg-[#68b6c4]/15 blur-2xl pointer-events-none animate-pulse-glow" />
+                <div className="absolute inset-8 rounded-full bg-[#086972]/25 dark:bg-[#68b6c4]/30 blur-3xl pointer-events-none animate-pulse-glow" />
+
+                {/* Static outer track */}
+                <div className="absolute inset-0 rounded-full border-[1.5px] border-[#086972]/45 dark:border-[#68b6c4]/50 pointer-events-none" />
+
+                {/* Sweeping accent arc */}
+                <div className="absolute inset-0 rounded-full portrait-orbit-arc animate-orbit pointer-events-none" />
+
+                {/* Counter-rotating inner tick ring */}
+                <svg
+                  className="absolute inset-[10px] text-[#086972] dark:text-[#68b6c4] animate-orbit-reverse pointer-events-none"
+                  viewBox="0 0 200 200"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="97"
+                    stroke="currentColor"
+                    strokeWidth="1.25"
+                    strokeDasharray="3.5 11"
+                    strokeLinecap="round"
+                    opacity="0.55"
+                  />
+                </svg>
+
+                {/* Orbiting nodes */}
+                <div className="absolute inset-0 animate-orbit pointer-events-none">
+                  <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#086972] dark:bg-[#68b6c4] shadow-[0_0_14px_2px_rgba(8,105,114,0.65)] dark:shadow-[0_0_16px_2px_rgba(104,182,196,0.75)]" />
+                  <span className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#086972]/80 dark:bg-[#68b6c4] shadow-[0_0_10px_1px_rgba(8,105,114,0.45)] dark:shadow-[0_0_10px_1px_rgba(104,182,196,0.55)]" />
+                </div>
 
                 {/* Avatar Portrait Card */}
                 <div
-                  className="relative w-64 h-64 sm:w-76 sm:h-76 rounded-full overflow-hidden border-2 border-[#086972]/50 dark:border-[#68b6c4]/60 shadow-2xl shadow-black/10 cursor-pointer group bg-[#18242b]"
+                  className="relative w-64 h-64 sm:w-76 sm:h-76 rounded-full overflow-hidden border-2 border-[#086972]/70 dark:border-[#68b6c4]/75 shadow-2xl shadow-[#086972]/15 dark:shadow-black/30 cursor-pointer group bg-[#18242b]"
                   onClick={() => setAvatarModalOpen(true)}
                   title="Click to view full-size portrait"
                 >

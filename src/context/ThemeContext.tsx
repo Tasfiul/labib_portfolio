@@ -21,36 +21,35 @@ const ThemeContext = createContext<ThemeContextType>({
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("dark");
   const [accentColor, setAccentColor] = useState<string>("#10b981");
-  const [mounted, setMounted] = useState(false);
+
+  const applyTheme = (next: Theme) => {
+    const root = document.documentElement;
+    if (next === "dark") {
+      root.classList.add("dark");
+      root.style.colorScheme = "dark";
+    } else {
+      root.classList.remove("dark");
+      root.style.colorScheme = "light";
+    }
+  };
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("portfolio_theme") as Theme | null;
-    const initialTheme = savedTheme || "dark";
+    const initialTheme = savedTheme === "light" ? "light" : "dark";
     setTheme(initialTheme);
-    if (initialTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    setMounted(true);
+    applyTheme(initialTheme);
   }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
     localStorage.setItem("portfolio_theme", newTheme);
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    applyTheme(newTheme);
   };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, accentColor, setAccentColor }}>
-      <div className={theme === "dark" ? "dark" : ""}>
-        {children}
-      </div>
+      {children}
     </ThemeContext.Provider>
   );
 }
