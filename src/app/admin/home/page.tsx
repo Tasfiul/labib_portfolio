@@ -12,6 +12,7 @@ import {
   CheckCircle,
   HelpCircle,
   ExternalLink,
+  FileText,
 } from "lucide-react";
 
 export default function AdminHomePage() {
@@ -20,11 +21,21 @@ export default function AdminHomePage() {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingCv, setUploadingCv] = useState(false);
+  const [cvError, setCvError] = useState("");
 
   useEffect(() => {
     fetch("/api/profile")
       .then((res) => res.json())
       .then((data) => {
+        if (!data.stats || data.stats.length === 0) {
+          data.stats = [
+            { label: "CITATIONS", value: "300+" },
+            { label: "PUBLICATIONS", value: "15+" },
+            { label: "AWARDS & HONORS", value: "12" },
+            { label: "YEARS RESEARCH", value: "3+" },
+          ];
+        }
         setProfile(data);
         setLoading(false);
       })
@@ -79,6 +90,55 @@ export default function AdminHomePage() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleCvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+
+    setUploadingCv(true);
+    setCvError("");
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setProfile({ ...profile, resumeDownloadUrl: data.url });
+      } else {
+        setCvError(data.error || "Failed to upload CV");
+      }
+    } catch (err) {
+      console.error("CV upload failed", err);
+      setCvError("Network error uploading CV");
+    } finally {
+      setUploadingCv(false);
+    }
+  };
+
+  const updateStat = (index: number, field: "label" | "value", val: string) => {
+    if (!profile) return;
+    const stats = [...(profile.stats || [])];
+    if (!stats[index]) return;
+    stats[index] = { ...stats[index], [field]: val };
+    setProfile({ ...profile, stats });
+  };
+
+  const addStat = () => {
+    if (!profile) return;
+    const stats = [...(profile.stats || [])];
+    stats.push({ label: "NEW METRIC", value: "10+" });
+    setProfile({ ...profile, stats });
+  };
+
+  const removeStat = (index: number) => {
+    if (!profile) return;
+    const stats = (profile.stats || []).filter((_, i) => i !== index);
+    setProfile({ ...profile, stats });
   };
 
   // Highlights management
@@ -455,6 +515,143 @@ export default function AdminHomePage() {
                     </button>
                   </div>
                 ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Curriculum Vitae (CV) PDF Document */}
+      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-6">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-base font-bold text-white">
+              Curriculum Vitae (CV) PDF Document
+            </h2>
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-400">
+          Upload or link the CV PDF file that visitors will download when clicking the &quot;CV&quot; button on the homepage.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="space-y-3">
+            <label className="text-xs font-mono uppercase tracking-wider text-slate-400 block">
+              Upload CV Document (.pdf)
+            </label>
+            <div className="flex items-center gap-3">
+              <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 border border-slate-700 cursor-pointer transition-colors">
+                <Upload className="w-4 h-4" />
+                <span>{uploadingCv ? "Uploading PDF..." : "Upload New CV PDF"}</span>
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={handleCvUpload}
+                  className="hidden"
+                />
+              </label>
+
+              {profile.resumeDownloadUrl && (
+                <a
+                  href={profile.resumeDownloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 hover:text-emerald-400 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Preview Current CV</span>
+                </a>
+              )}
+            </div>
+            {cvError && <p className="text-xs text-red-400">{cvError}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-mono uppercase tracking-wider text-slate-400">
+              Or Direct CV Download URL / Path
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. /Farhan_Labib_CV.pdf or https://..."
+              value={profile.resumeDownloadUrl || ""}
+              onChange={(e) =>
+                setProfile({ ...profile, resumeDownloadUrl: e.target.value })
+              }
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-950 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Metrics & Quick Stats */}
+      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-6">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-base font-bold text-white">
+              Homepage Bottom Numbers &amp; Metrics
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={addStat}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition-colors cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Metric</span>
+          </button>
+        </div>
+
+        <p className="text-xs text-slate-400">
+          These numbers and labels are displayed prominently in the quick stats grid at the bottom of the homepage.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {(profile.stats || []).map((stat, idx) => (
+            <div
+              key={idx}
+              className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 relative group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase">
+                  Item #{idx + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeStat(idx)}
+                  className="text-slate-500 hover:text-red-400 p-1 rounded transition-colors"
+                  title="Remove this metric"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-mono text-slate-400 uppercase">
+                  Number / Value
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 300+"
+                  value={stat.value}
+                  onChange={(e) => updateStat(idx, "value", e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-800 bg-slate-900 text-emerald-400 font-black text-lg focus:outline-none focus:border-emerald-500 font-mono"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-mono text-slate-400 uppercase">
+                  Metric Label
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. CITATIONS"
+                  value={stat.label}
+                  onChange={(e) => updateStat(idx, "label", e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-800 bg-slate-900 text-white text-xs font-semibold uppercase tracking-wider focus:outline-none focus:border-emerald-500"
+                />
               </div>
             </div>
           ))}

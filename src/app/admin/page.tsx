@@ -68,7 +68,7 @@ export default function AdminOverviewPage() {
         setMessages(msgs);
         setStats({
           projects: Array.isArray(projs) ? projs.length : 0,
-          publications: Array.isArray(pubs) ? pubs.length : 0,
+          publications: Array.isArray(pubs) ? pubs.length : (pubs?.publications?.length || 0),
           awards: Array.isArray(awards) ? awards.length : 0,
           gallery: gal?.items?.length || 0,
           unreadMessages: msgs.filter((m) => !m.read).length,
@@ -113,20 +113,22 @@ export default function AdminOverviewPage() {
 
   const handleToggleRead = async (id: string, currentRead: boolean) => {
     try {
-      await fetch("/api/messages", {
+      const res = await fetch("/api/messages", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, read: !currentRead }),
       });
-      setMessages((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, read: !currentRead } : m))
-      );
-      setStats((prev) => ({
-        ...prev,
-        unreadMessages: currentRead
-          ? prev.unreadMessages + 1
-          : Math.max(0, prev.unreadMessages - 1),
-      }));
+      if (res.ok) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === id ? { ...m, read: !currentRead } : m))
+        );
+        setStats((prev) => ({
+          ...prev,
+          unreadMessages: currentRead
+            ? prev.unreadMessages + 1
+            : Math.max(0, prev.unreadMessages - 1),
+        }));
+      }
     } catch (err) {
       console.error("Failed to toggle read", err);
     }
@@ -135,10 +137,26 @@ export default function AdminOverviewPage() {
   const handleDeleteMessage = async (id: string) => {
     if (!confirm("Are you sure you want to delete this message?")) return;
     try {
-      await fetch(`/api/messages?id=${id}`, { method: "DELETE" });
-      setMessages((prev) => prev.filter((m) => m.id !== id));
+      const res = await fetch(`/api/messages?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        const deletedMsg = messages.find((m) => m.id === id);
+        setMessages((prev) => prev.filter((m) => m.id !== id));
+        setStats((prev) => ({
+          ...prev,
+          unreadMessages:
+            deletedMsg && !deletedMsg.read
+              ? Math.max(0, prev.unreadMessages - 1)
+              : prev.unreadMessages,
+        }));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to delete message");
+      }
     } catch (err) {
       console.error("Failed to delete message", err);
+      alert("Failed to delete message due to network error");
     }
   };
 

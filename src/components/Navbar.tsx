@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { name: "Resume", href: "/resume" },
   { name: "Publications", href: "/publications" },
   { name: "Projects", href: "/projects" },
-  { name: "Awards", href: "/awards" },
+  { name: "Awards & Certificates", href: "/awards" },
   { name: "Gallery", href: "/gallery" },
   { name: "Contact", href: "/contact" },
 ];
@@ -62,7 +62,7 @@ export default function Navbar() {
         {/* Brand */}
         <Link
           href="/"
-          className="text-2xl sm:text-3xl font-black tracking-tight text-[#1c2830] dark:text-white flex items-center gap-1.5 group"
+          className="text-2xl sm:text-3xl font-black tracking-tight text-[#1c2830] dark:text-white flex items-center gap-1.5 group flex-shrink-0"
         >
           <span className="font-extrabold">Farhan</span>
           <span className="font-semibold text-[#086972] dark:text-[#68b6c4] group-hover:opacity-90 transition-opacity">
@@ -71,7 +71,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden lg:flex items-center gap-1.5 xl:gap-3">
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
           {NAV_LINKS.map((link) => {
             const isActive =
               link.href === "/"
@@ -82,7 +82,7 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`relative px-4 py-2 text-[16.5px] font-bold transition-colors duration-200 rounded-lg ${
+                className={`relative px-3 py-2 text-[15px] xl:text-[16px] font-bold whitespace-nowrap transition-colors duration-200 rounded-lg ${
                   isActive
                     ? "text-[#086972] dark:text-[#68b6c4]"
                     : "text-[#4a606a] dark:text-[#9bb0bb] hover:text-[#086972] dark:hover:text-[#68b6c4] hover:bg-[#edf1f2]/80 dark:hover:bg-[#1e2d36]/60"
@@ -90,7 +90,7 @@ export default function Navbar() {
               >
                 {link.name}
                 {isActive && (
-                  <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#086972] dark:bg-[#68b6c4] rounded-full" />
+                  <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#086972] dark:bg-[#68b6c4] rounded-full" />
                 )}
               </Link>
             );

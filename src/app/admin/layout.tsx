@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Resume Categories", href: "/admin/resume", icon: FileText },
     { name: "Publications", href: "/admin/publications", icon: BookOpen },
     { name: "Projects (Blocks)", href: "/admin/projects", icon: Layers },
-    { name: "Awards & Honors", href: "/admin/awards", icon: Trophy },
+    { name: "Awards & Certificates", href: "/admin/awards", icon: Trophy },
     { name: "Gallery Showcase", href: "/admin/gallery", icon: ImageIcon },
     { name: "Site & Contact Config", href: "/admin/settings", icon: Settings },
   ];

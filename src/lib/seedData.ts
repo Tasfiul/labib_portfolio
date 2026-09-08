@@ -725,6 +725,7 @@ export const initialSiteConfig: SiteConfig = {
   siteName: "Farhan Labib",
   primaryAccent: "#086972",
   googleScholarUrl: "https://scholar.google.com",
+  totalPublicationCitations: "145+",
   emails: [
     "farhan.ete.ruet@gmail.com",
     "contact@farhanlabib.me",

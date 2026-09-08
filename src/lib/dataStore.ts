@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { connectDB } from "./db";
 import {
   ProfileModel,
@@ -283,11 +284,7 @@ export async function updateSiteConfig(data: Partial<SiteConfig>): Promise<SiteC
 export async function getMessages(): Promise<ContactMessage[]> {
   const db = await connectDB();
   if (db) {
-    let list = await ContactMessageModel.find().sort({ createdAt: -1 }).lean();
-    if (list.length === 0) {
-      await ContactMessageModel.insertMany(initialMessages);
-      list = await ContactMessageModel.find().sort({ createdAt: -1 }).lean();
-    }
+    const list = await ContactMessageModel.find().sort({ createdAt: -1 }).lean();
     return JSON.parse(JSON.stringify(list));
   }
   return memoryStore.messages.sort(
@@ -318,9 +315,14 @@ export async function addMessage(msg: Omit<ContactMessage, "id" | "read" | "crea
 export async function markMessageRead(id: string, read: boolean): Promise<boolean> {
   const db = await connectDB();
   if (db) {
-    await ContactMessageModel.updateOne({ id }, { $set: { read } });
+    const filter = mongoose.Types.ObjectId.isValid(id)
+      ? { $or: [{ id }, { _id: id }] }
+      : { id };
+    await ContactMessageModel.updateOne(filter, { $set: { read } });
   } else {
-    const item = memoryStore.messages.find((m) => m.id === id);
+    const item = memoryStore.messages.find(
+      (m) => m.id === id || (m as { _id?: string })._id === id
+    );
     if (item) item.read = read;
   }
   return true;
@@ -329,9 +331,14 @@ export async function markMessageRead(id: string, read: boolean): Promise<boolea
 export async function deleteMessage(id: string): Promise<boolean> {
   const db = await connectDB();
   if (db) {
-    await ContactMessageModel.deleteOne({ id });
+    const filter = mongoose.Types.ObjectId.isValid(id)
+      ? { $or: [{ id }, { _id: id }] }
+      : { id };
+    await ContactMessageModel.deleteOne(filter);
   } else {
-    memoryStore.messages = memoryStore.messages.filter((m) => m.id !== id);
+    memoryStore.messages = memoryStore.messages.filter(
+      (m) => m.id !== id && (m as { _id?: string })._id !== id
+    );
   }
   return true;
 }

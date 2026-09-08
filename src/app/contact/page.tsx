@@ -191,13 +191,12 @@ export default function ContactPage() {
                   </p>
                   <div className="space-y-1.5">
                     {config.emails.map((email, idx) => (
-                      <a
+                      <p
                         key={idx}
-                        href={`mailto:${email}`}
-                        className="block text-base text-[#4a606a] dark:text-[#d0dee4] hover:text-[#086972] dark:hover:text-[#68b6c4] transition-colors font-mono"
+                        className="block text-base text-[#4a606a] dark:text-[#d0dee4] font-mono select-text cursor-default"
                       >
                         {email}
-                      </a>
+                      </p>
                     ))}
                   </div>
                 </div>
@@ -211,13 +210,12 @@ export default function ContactPage() {
                   </p>
                   <div className="space-y-1.5">
                     {config.phoneNumbers.map((phone, idx) => (
-                      <a
+                      <p
                         key={idx}
-                        href={`tel:${phone.replace(/\s+/g, "")}`}
-                        className="block text-base text-[#4a606a] dark:text-[#d0dee4] hover:text-[#086972] dark:hover:text-[#68b6c4] transition-colors font-mono"
+                        className="block text-base text-[#4a606a] dark:text-[#d0dee4] font-mono select-text cursor-default"
                       >
                         {phone}
-                      </a>
+                      </p>
                     ))}
                   </div>
                 </div>

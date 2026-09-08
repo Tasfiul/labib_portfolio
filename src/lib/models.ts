@@ -180,6 +180,7 @@ const SiteConfigSchema = new Schema(
     siteName: { type: String, default: "Farhan Labib" },
     primaryAccent: { type: String, default: "#10b981" },
     googleScholarUrl: { type: String, default: "https://scholar.google.com" },
+    totalPublicationCitations: { type: String, default: "145+" },
     emails: [{ type: String }],
     phoneNumbers: [{ type: String }],
     addresses: [{ type: String }],

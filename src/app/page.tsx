@@ -15,6 +15,7 @@ import {
   Award,
   Layers,
   BookOpen,
+  Download,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -94,13 +95,14 @@ export default function HomePage() {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-4 pt-3">
-                <Link
-                  href="/resume"
-                  className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl text-base font-semibold bg-[#086972] hover:bg-[#06535a] dark:bg-[#68b6c4] dark:hover:bg-[#85c8d4] text-white dark:text-[#121a20] shadow-md shadow-[#086972]/15 dark:shadow-[#68b6c4]/15 transition-all duration-200 transform hover:-translate-y-0.5"
+                <a
+                  href={profile.resumeDownloadUrl || "/Farhan_Labib_CV.pdf"}
+                  download="Farhan_Labib_CV.pdf"
+                  className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl text-base font-semibold bg-[#086972] hover:bg-[#06535a] dark:bg-[#68b6c4] dark:hover:bg-[#85c8d4] text-white dark:text-[#121a20] shadow-md shadow-[#086972]/15 dark:shadow-[#68b6c4]/15 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
                 >
-                  <span>View Resume</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                  <span>CV</span>
+                  <Download className="w-4 h-4" />
+                </a>
 
                 <Link
                   href="/projects"

@@ -18,14 +18,25 @@ export default function AdminPublicationsPage() {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [activePubId, setActivePubId] = useState<string>("");
+  const [totalCitations, setTotalCitations] = useState<string>("145+");
   const [uploadingFig, setUploadingFig] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/publications")
       .then((res) => res.json())
-      .then((data: Publication[]) => {
-        setPublications(data || []);
-        if (data.length > 0) setActivePubId(data[0].id);
+      .then((data) => {
+        const pubList = Array.isArray(data) ? data : (data.publications || []);
+        setPublications(pubList);
+        if (data.totalCitations) {
+          setTotalCitations(data.totalCitations);
+        } else {
+          const sum = pubList.reduce(
+            (acc: number, pub: Publication) => acc + (pub.citationCount || 0),
+            0
+          );
+          setTotalCitations(sum > 0 ? `${sum}+` : "145+");
+        }
+        if (pubList.length > 0) setActivePubId(pubList[0].id);
         setLoading(false);
       })
       .catch((err) => {
@@ -44,7 +55,10 @@ export default function AdminPublicationsPage() {
       const res = await fetch("/api/publications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(publications),
+        body: JSON.stringify({
+          publications,
+          totalCitations,
+        }),
       });
       if (res.ok) {
         setSaveSuccess(true);
@@ -180,9 +194,39 @@ export default function AdminPublicationsPage() {
       {saveSuccess && (
         <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium flex items-center gap-2">
           <CheckCircle className="w-4 h-4" />
-          <span>Publications saved successfully!</span>
+          <span>Publications and citations saved successfully!</span>
         </div>
       )}
+
+      {/* Total Citations Metric Configuration Card */}
+      <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-emerald-400" />
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+              Total Citations Badge (Public Publication Page)
+            </h2>
+          </div>
+          <p className="text-xs text-slate-400">
+            Customize the total citation count displayed in the top-right badge of the public publications page.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="space-y-1 w-full sm:w-48">
+            <label className="text-[11px] font-mono text-slate-400 uppercase">
+              Total Citations
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. 145+ or 300+"
+              value={totalCitations}
+              onChange={(e) => setTotalCitations(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-800 bg-slate-950 text-emerald-400 font-mono font-bold text-base focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Two-column: List + Editor */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

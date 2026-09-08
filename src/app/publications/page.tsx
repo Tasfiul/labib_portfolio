@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function PublicationsPage() {
   const [publications, setPublications] = useState<Publication[]>([]);
+  const [customTotalCitations, setCustomTotalCitations] = useState<string>("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<{
@@ -29,10 +30,14 @@ export default function PublicationsPage() {
   useEffect(() => {
     fetch("/api/publications")
       .then((res) => res.json())
-      .then((data: Publication[]) => {
-        setPublications(data);
-        if (data.length > 0) {
-          setExpandedId(data[0].id); // Expand first by default
+      .then((data) => {
+        const pubList = Array.isArray(data) ? data : (data.publications || []);
+        setPublications(pubList);
+        if (data.totalCitations) {
+          setCustomTotalCitations(data.totalCitations);
+        }
+        if (pubList.length > 0) {
+          setExpandedId(pubList[0].id); // Expand first by default
         }
         setLoading(false);
       })
@@ -42,10 +47,12 @@ export default function PublicationsPage() {
       });
   }, []);
 
-  const totalCitations = publications.reduce(
+  const calculatedCitations = publications.reduce(
     (acc, pub) => acc + (pub.citationCount || 0),
     0
   );
+  const displayTotalCitations =
+    customTotalCitations || (calculatedCitations > 0 ? `${calculatedCitations}+` : "300+");
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -90,7 +97,7 @@ export default function PublicationsPage() {
               Total Citations
             </p>
             <p className="text-3xl font-black text-[#086972] dark:text-[#68b6c4] font-mono">
-              {totalCitations > 0 ? `${totalCitations}+` : "300+"}
+              {displayTotalCitations}
             </p>
           </div>
         </div>
