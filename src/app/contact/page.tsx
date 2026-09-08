@@ -191,12 +191,13 @@ export default function ContactPage() {
                   </p>
                   <div className="space-y-1.5">
                     {config.emails.map((email, idx) => (
-                      <p
+                      <a
                         key={idx}
-                        className="block text-base text-[#4a606a] dark:text-[#d0dee4] font-mono select-text cursor-default"
+                        href={`mailto:${email}`}
+                        className="block text-base text-[#4a606a] dark:text-[#d0dee4] font-mono select-text hover:text-[#086972] dark:hover:text-[#68b6c4] transition-colors"
                       >
                         {email}
-                      </p>
+                      </a>
                     ))}
                   </div>
                 </div>
