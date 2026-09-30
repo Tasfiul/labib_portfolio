@@ -15,7 +15,7 @@ export default function Footer() {
       .then((res) => res.json())
       .then((data) => setConfig(data))
       .catch(() => {});
-  }, []);
+  }, [pathname]);
 
   if (pathname.startsWith("/admin")) {
     return null;
@@ -31,9 +31,9 @@ export default function Footer() {
               href="/"
               className="text-lg font-bold tracking-tight text-[#1c2830] dark:text-white flex items-center gap-1 group"
             >
-              <span className="font-extrabold">{config?.siteName ? config.siteName.split(" ")[0] : "Farhan"}</span>
+              <span className="font-extrabold">Farhan</span>
               <span className="font-semibold text-[#086972] dark:text-[#68b6c4]">
-                {config?.siteName && config.siteName.includes(" ") ? config.siteName.substring(config.siteName.indexOf(" ") + 1) : "Labib"}
+                Labib
               </span>
             </Link>
             <p className="text-xs text-[#768d97] dark:text-[#9bb0bb] mt-1">

@@ -7,12 +7,13 @@ import {
   Plus,
   Trash2,
   Upload,
-  Image as ImageIcon,
   CheckCircle,
   FolderPlus,
 } from "lucide-react";
+import { useAdminConfirm } from "@/components/admin/AdminConfirmProvider";
 
 export default function AdminGalleryPage() {
+  const { confirm, notify } = useAdminConfirm();
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [categories, setCategories] = useState<GalleryCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,10 +48,17 @@ export default function AdminGalleryPage() {
       });
       if (res.ok) {
         setSaveSuccess(true);
+        notify("Gallery items saved successfully!", "success");
         setTimeout(() => setSaveSuccess(false), 3000);
+      } else if (res.status === 401) {
+        notify("Session expired or unauthorized. Please re-login to save.", "error");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        notify(data.error || "Failed to save gallery", "error");
       }
     } catch (err) {
       console.error("Failed to save gallery", err);
+      notify("Network error: Failed to save gallery", "error");
     } finally {
       setSaving(false);
     }
@@ -65,8 +73,18 @@ export default function AdminGalleryPage() {
     setCategories([...categories, newCat]);
   };
 
-  const removeCategory = (id: string) => {
+  const removeCategory = async (id: string) => {
+    const cat = categories.find((c) => c.id === id);
+    const confirmed = await confirm({
+      title: "Delete Category Section",
+      message: `Are you sure you want to delete category "${cat?.name || "this category"}"?`,
+      confirmText: "Yes, Delete",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setCategories(categories.filter((c) => c.id !== id));
+    notify("Category removed", "info");
   };
 
   const updateCategory = (id: string, name: string) => {
@@ -89,9 +107,18 @@ export default function AdminGalleryPage() {
     setItems([newItem, ...items]);
   };
 
-  const removeItem = (id: string) => {
-    if (!confirm("Are you sure you want to delete this gallery item?")) return;
+  const removeItem = async (id: string) => {
+    const itemToDelete = items.find((i) => i.id === id);
+    const confirmed = await confirm({
+      title: "Delete Gallery Photo",
+      message: `Are you sure you want to delete "${itemToDelete?.title || "this photo"}"? Click 'Save Gallery' to commit.`,
+      confirmText: "Yes, Delete",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setItems(items.filter((i) => i.id !== id));
+    notify("Gallery item removed from list", "info");
   };
 
   const updateItem = (id: string, field: keyof GalleryItem, value: unknown) => {

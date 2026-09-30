@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSiteConfig, updateSiteConfig } from "@/lib/dataStore";
 import { verifyAdminSession } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const config = await getSiteConfig();
-    return NextResponse.json(config);
+    return NextResponse.json(config, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      },
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to fetch settings";
     return NextResponse.json({ error: message }, { status: 500 });

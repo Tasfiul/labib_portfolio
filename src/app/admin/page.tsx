@@ -3,10 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { ContactMessage } from "@/types";
 import {
-  Lock,
-  ArrowRight,
   Mail,
-  CheckCircle2,
   Trash2,
   MessageSquare,
   Clock,
@@ -15,15 +12,11 @@ import {
   Layers,
   BookOpen,
   Trophy,
-  Image as ImageIcon,
 } from "lucide-react";
+import { useAdminConfirm } from "@/components/admin/AdminConfirmProvider";
 
 export default function AdminOverviewPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [passcode, setPasscode] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [loginLoading, setLoginLoading] = useState(false);
-
+  const { confirm, notify } = useAdminConfirm();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [stats, setStats] = useState({
     projects: 0,
@@ -33,83 +26,48 @@ export default function AdminOverviewPage() {
     unreadMessages: 0,
   });
 
-  const checkAuth = async () => {
-    try {
-      const res = await fetch("/api/auth/check");
-      const data = await res.json();
-      setIsAuthenticated(data.authenticated);
-      if (data.authenticated) {
-        loadData();
-      }
-    } catch {
-      setIsAuthenticated(false);
-    }
-  };
-
-  const loadData = async () => {
-    try {
-      const [msgsRes, projRes, pubRes, awardRes, galRes] = await Promise.all([
-        fetch("/api/messages"),
-        fetch("/api/projects"),
-        fetch("/api/publications"),
-        fetch("/api/awards"),
-        fetch("/api/gallery"),
-      ]);
-
-      const [msgs, projs, pubs, awards, gal] = await Promise.all([
-        msgsRes.json(),
-        projRes.json(),
-        pubRes.json(),
-        awardRes.json(),
-        galRes.json(),
-      ]);
-
-      if (Array.isArray(msgs)) {
-        setMessages(msgs);
-        setStats({
-          projects: Array.isArray(projs) ? projs.length : 0,
-          publications: Array.isArray(pubs) ? pubs.length : (pubs?.publications?.length || 0),
-          awards: Array.isArray(awards) ? awards.length : 0,
-          gallery: gal?.items?.length || 0,
-          unreadMessages: msgs.filter((m) => !m.read).length,
-        });
-      }
-    } catch (err) {
-      console.error("Failed to load admin stats", err);
-    }
-  };
-
   useEffect(() => {
-    checkAuth();
-  }, []);
+    let active = true;
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!passcode) return;
+    async function loadData() {
+      try {
+        const [msgsRes, projRes, pubRes, awardRes, galRes] = await Promise.all([
+          fetch("/api/messages"),
+          fetch("/api/projects"),
+          fetch("/api/publications"),
+          fetch("/api/awards"),
+          fetch("/api/gallery"),
+        ]);
 
-    setLoginLoading(true);
-    setLoginError("");
+        const [msgs, projs, pubs, awards, gal] = await Promise.all([
+          msgsRes.json(),
+          projRes.json(),
+          pubRes.json(),
+          awardRes.json(),
+          galRes.json(),
+        ]);
 
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passcode }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setIsAuthenticated(true);
-        loadData();
-      } else {
-        setLoginError(data.error || "Incorrect passcode");
+        if (active && Array.isArray(msgs)) {
+          setMessages(msgs);
+          setStats({
+            projects: Array.isArray(projs) ? projs.length : 0,
+            publications: Array.isArray(pubs) ? pubs.length : (pubs?.publications?.length || 0),
+            awards: Array.isArray(awards) ? awards.length : 0,
+            gallery: gal?.items?.length || 0,
+            unreadMessages: msgs.filter((m) => !m.read).length,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load admin stats", err);
       }
-    } catch {
-      setLoginError("Login failed due to a network error");
-    } finally {
-      setLoginLoading(false);
     }
-  };
+
+    loadData();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleToggleRead = async (id: string, currentRead: boolean) => {
     try {
@@ -128,6 +86,7 @@ export default function AdminOverviewPage() {
             ? prev.unreadMessages + 1
             : Math.max(0, prev.unreadMessages - 1),
         }));
+        notify(currentRead ? "Marked as unread" : "Marked as read", "info");
       }
     } catch (err) {
       console.error("Failed to toggle read", err);
@@ -135,86 +94,39 @@ export default function AdminOverviewPage() {
   };
 
   const handleDeleteMessage = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this message?")) return;
+    const msgToDelete = messages.find((m) => m.id === id);
+    const confirmed = await confirm({
+      title: "Delete Inquiry Message",
+      message: `Are you sure you want to delete the message from ${msgToDelete?.name || "this sender"}? This cannot be undone.`,
+      confirmText: "Yes, Delete",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+
     try {
       const res = await fetch(`/api/messages?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
       if (res.ok) {
-        const deletedMsg = messages.find((m) => m.id === id);
         setMessages((prev) => prev.filter((m) => m.id !== id));
         setStats((prev) => ({
           ...prev,
           unreadMessages:
-            deletedMsg && !deletedMsg.read
+            msgToDelete && !msgToDelete.read
               ? Math.max(0, prev.unreadMessages - 1)
               : prev.unreadMessages,
         }));
+        notify("Message deleted successfully", "success");
       } else {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || "Failed to delete message");
+        notify(data.error || "Failed to delete message", "error");
       }
     } catch (err) {
       console.error("Failed to delete message", err);
-      alert("Failed to delete message due to network error");
+      notify("Failed to delete message due to network error", "error");
     }
   };
-
-  // If not authenticated, render the Master Passcode Screen
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-[85vh] flex items-center justify-center p-4">
-        <div className="w-full max-w-md p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6">
-          <div className="text-center space-y-2">
-            <div className="inline-flex p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-2">
-              <Lock className="w-6 h-6" />
-            </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">
-              Portfolio Admin Portal
-            </h1>
-            <p className="text-xs text-slate-400">
-              Enter your admin passcode to access content management.
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-mono uppercase tracking-wider text-slate-400">
-                Master Passcode
-              </label>
-              <input
-                type="password"
-                placeholder="Enter passcode (default: admin123)"
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-950 text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono text-sm"
-                autoFocus
-              />
-            </div>
-
-            {loginError && (
-              <p className="text-xs text-red-400 font-medium bg-red-500/10 border border-red-500/20 p-2.5 rounded-lg">
-                {loginError}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loginLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20 disabled:opacity-50 transition-all cursor-pointer font-bold"
-            >
-              <span>{loginLoading ? "Authenticating..." : "Unlock Dashboard"}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
-
-          <p className="text-[11px] text-center text-slate-500 font-mono">
-            Default initial passcode: <code className="text-emerald-400">admin123</code> (configurable via .env)
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">

@@ -181,6 +181,11 @@ const SiteConfigSchema = new Schema(
     primaryAccent: { type: String, default: "#10b981" },
     googleScholarUrl: { type: String, default: "https://scholar.google.com" },
     totalPublicationCitations: { type: String, default: "145+" },
+    contactIntro: {
+      type: String,
+      default:
+        "Feel free to reach out for research collaborations, STEM speaking engagements, or engineering consultations.",
+    },
     emails: [{ type: String }],
     phoneNumbers: [{ type: String }],
     addresses: [{ type: String }],

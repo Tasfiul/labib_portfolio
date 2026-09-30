@@ -7,14 +7,13 @@ import {
   Plus,
   Trash2,
   FolderPlus,
-  ChevronDown,
-  ChevronUp,
   CheckCircle,
   Briefcase,
-  Layers,
 } from "lucide-react";
+import { useAdminConfirm } from "@/components/admin/AdminConfirmProvider";
 
 export default function AdminResumePage() {
+  const { confirm, notify } = useAdminConfirm();
   const [categories, setCategories] = useState<ResumeCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,10 +45,17 @@ export default function AdminResumePage() {
       });
       if (res.ok) {
         setSaveSuccess(true);
+        notify("Resume categories saved successfully!", "success");
         setTimeout(() => setSaveSuccess(false), 3000);
+      } else if (res.status === 401) {
+        notify("Session expired or unauthorized. Please re-login to save.", "error");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        notify(data.error || "Failed to save resume", "error");
       }
     } catch (err) {
       console.error("Failed to save resume", err);
+      notify("Network error: Failed to save resume", "error");
     } finally {
       setSaving(false);
     }
@@ -68,10 +74,18 @@ export default function AdminResumePage() {
     setCategories([...categories, newCat]);
   };
 
-  const removeCategory = (catId: string) => {
-    if (!confirm("Are you sure you want to delete this category and all its items?"))
-      return;
+  const removeCategory = async (catId: string) => {
+    const cat = categories.find((c) => c.id === catId);
+    const confirmed = await confirm({
+      title: "Delete Category Section",
+      message: `Are you sure you want to delete category "${cat?.name || "this category"}" and all its ${cat?.items?.length || 0} items? Click 'Save Categories' to commit.`,
+      confirmText: "Yes, Delete",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setCategories(categories.filter((c) => c.id !== catId));
+    notify("Category removed from list", "info");
   };
 
   const updateCategoryField = (
@@ -101,7 +115,17 @@ export default function AdminResumePage() {
     );
   };
 
-  const removeItemFromCategory = (catId: string, itemId: string) => {
+  const removeItemFromCategory = async (catId: string, itemId: string) => {
+    const cat = categories.find((c) => c.id === catId);
+    const item = cat?.items.find((i) => i.id === itemId);
+    const confirmed = await confirm({
+      title: "Remove Resume Item",
+      message: `Are you sure you want to remove "${item?.title || "this item"}"?`,
+      confirmText: "Yes, Remove",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setCategories(
       categories.map((c) =>
         c.id === catId
@@ -109,6 +133,7 @@ export default function AdminResumePage() {
           : c
       )
     );
+    notify("Item removed", "info");
   };
 
   const updateItemField = (

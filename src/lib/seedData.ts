@@ -726,6 +726,8 @@ export const initialSiteConfig: SiteConfig = {
   primaryAccent: "#086972",
   googleScholarUrl: "https://scholar.google.com",
   totalPublicationCitations: "145+",
+  contactIntro:
+    "Feel free to reach out for research collaborations, STEM speaking engagements, or engineering consultations.",
   emails: [
     "farhan.ete.ruet@gmail.com",
     "contact@farhanlabib.me",

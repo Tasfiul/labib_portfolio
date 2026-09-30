@@ -7,17 +7,17 @@ import {
   Plus,
   Trash2,
   Upload,
-  Layers,
   CheckCircle,
   Video,
   Image as ImageIcon,
   Type,
   Heading,
   MessageSquare,
-  Sparkles,
 } from "lucide-react";
+import { useAdminConfirm } from "@/components/admin/AdminConfirmProvider";
 
 export default function AdminProjectsPage() {
+  const { confirm, notify } = useAdminConfirm();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -58,10 +58,17 @@ export default function AdminProjectsPage() {
       });
       if (res.ok) {
         setSaveSuccess(true);
+        notify("Projects saved successfully!", "success");
         setTimeout(() => setSaveSuccess(false), 3000);
+      } else if (res.status === 401) {
+        notify("Session expired or unauthorized. Please re-login to save.", "error");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        notify(data.error || "Failed to save projects", "error");
       }
     } catch (err) {
       console.error("Failed to save projects", err);
+      notify("Network error: Failed to save projects", "error");
     } finally {
       setSaving(false);
     }
@@ -99,13 +106,22 @@ export default function AdminProjectsPage() {
     setActiveProjectId(newProj.id);
   };
 
-  const removeProject = (id: string) => {
-    if (!confirm("Are you sure you want to delete this project?")) return;
+  const removeProject = async (id: string) => {
+    const projToDelete = projects.find((p) => p.id === id);
+    const confirmed = await confirm({
+      title: "Delete Project",
+      message: `Are you sure you want to delete "${projToDelete?.title || "this project"}"? Click 'Save Projects' to commit.`,
+      confirmText: "Yes, Delete",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     const remaining = projects.filter((p) => p.id !== id);
     setProjects(remaining);
     if (remaining.length > 0) {
       setActiveProjectId(remaining[0].id);
     }
+    notify("Project removed from list", "info");
   };
 
   const updateActiveField = (field: keyof Project, value: unknown) => {
@@ -134,12 +150,21 @@ export default function AdminProjectsPage() {
     updateActiveField("blocks", [...(activeProject.blocks || []), newBlock]);
   };
 
-  const removeBlock = (blockId: string) => {
+  const removeBlock = async (blockId: string) => {
     if (!activeProject) return;
+    const confirmed = await confirm({
+      title: "Remove Content Block",
+      message: "Are you sure you want to remove this block?",
+      confirmText: "Yes, Remove",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     updateActiveField(
       "blocks",
       activeProject.blocks.filter((b) => b.id !== blockId)
     );
+    notify("Block removed", "info");
   };
 
   const updateBlock = (

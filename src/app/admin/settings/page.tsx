@@ -6,15 +6,16 @@ import {
   Save,
   Plus,
   Trash2,
-  Settings,
   CheckCircle,
   Mail,
   Phone,
   MapPin,
   Share2,
 } from "lucide-react";
+import { useAdminConfirm } from "@/components/admin/AdminConfirmProvider";
 
 export default function AdminSettingsPage() {
+  const { confirm, notify } = useAdminConfirm();
   const [config, setConfig] = useState<SiteConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,11 +47,22 @@ export default function AdminSettingsPage() {
         body: JSON.stringify(config),
       });
       if (res.ok) {
+        const updated = await res.json().catch(() => null);
+        if (updated && typeof updated === "object") {
+          setConfig(updated);
+        }
         setSaveSuccess(true);
+        notify("Site configuration saved successfully!", "success");
         setTimeout(() => setSaveSuccess(false), 3000);
+      } else if (res.status === 401) {
+        notify("Session expired or unauthorized. Please re-login to save.", "error");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        notify(data.error || "Failed to save settings", "error");
       }
     } catch (err) {
       console.error("Failed to save settings", err);
+      notify("Network error: Failed to save settings", "error");
     } finally {
       setSaving(false);
     }
@@ -139,12 +151,22 @@ export default function AdminSettingsPage() {
       ),
     });
   };
-  const removeSocialLink = (id: string) => {
+  const removeSocialLink = async (id: string) => {
     if (!config) return;
+    const link = config.socialLinks.find((s) => s.id === id);
+    const confirmed = await confirm({
+      title: "Remove Social Link",
+      message: `Are you sure you want to remove link for ${link?.platform || "this channel"}?`,
+      confirmText: "Yes, Remove",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setConfig({
       ...config,
       socialLinks: config.socialLinks.filter((s) => s.id !== id),
     });
+    notify("Social link removed", "info");
   };
 
   if (loading || !config) {
@@ -185,25 +207,13 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
-      {/* Brand & Scholar Link */}
+      {/* Scholar Profile & Contact Intro */}
       <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
         <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-slate-800 pb-3">
-          Site Identity & Scholar Profile
+          Scholar Profile &amp; Contact Introduction
         </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-[11px] font-mono text-slate-400 uppercase">
-              Brand Name / Navbar Logo Text
-            </label>
-            <input
-              type="text"
-              value={config.siteName}
-              onChange={(e) => setConfig({ ...config, siteName: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg border border-slate-800 bg-slate-950 text-white text-xs font-bold focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-
+        <div className="grid grid-cols-1 gap-4">
           <div className="space-y-1">
             <label className="text-[11px] font-mono text-slate-400 uppercase">
               Google Scholar Profile URL (Navbar Button)
@@ -218,7 +228,7 @@ export default function AdminSettingsPage() {
             />
           </div>
 
-          <div className="space-y-1 sm:col-span-2">
+          <div className="space-y-1">
             <label className="text-[11px] font-mono text-slate-400 uppercase">
               Contact Page Introduction Paragraph
             </label>
@@ -233,7 +243,7 @@ export default function AdminSettingsPage() {
             />
           </div>
 
-          <div className="space-y-1 sm:col-span-2">
+          <div className="space-y-1">
             <label className="text-[11px] font-mono text-slate-400 uppercase">
               Footer Copyright Text
             </label>
@@ -420,6 +430,18 @@ export default function AdminSettingsPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Bottom Save Bar */}
+      <div className="flex items-center justify-end pt-4 border-t border-slate-800">
+        <button
+          type="submit"
+          disabled={saving}
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-md shadow-emerald-500/20 disabled:opacity-50 cursor-pointer transition-all"
+        >
+          <Save className="w-4 h-4" />
+          <span>{saving ? "Saving..." : "Save Settings"}</span>
+        </button>
       </div>
     </form>
   );

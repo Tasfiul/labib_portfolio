@@ -8,14 +8,14 @@ import {
   Trash2,
   Upload,
   Sparkles,
-  Link as LinkIcon,
   CheckCircle,
-  HelpCircle,
   ExternalLink,
   FileText,
 } from "lucide-react";
+import { useAdminConfirm } from "@/components/admin/AdminConfirmProvider";
 
 export default function AdminHomePage() {
+  const { confirm, notify } = useAdminConfirm();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,10 +59,17 @@ export default function AdminHomePage() {
       });
       if (res.ok) {
         setSaveSuccess(true);
+        notify("Profile and homepage saved successfully!", "success");
         setTimeout(() => setSaveSuccess(false), 3000);
+      } else if (res.status === 401) {
+        notify("Session expired or unauthorized. Please re-login to save.", "error");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        notify(data.error || "Failed to save profile", "error");
       }
     } catch (err) {
       console.error("Failed to save profile", err);
+      notify("Network error: Failed to save profile", "error");
     } finally {
       setSaving(false);
     }
@@ -156,12 +163,22 @@ export default function AdminHomePage() {
     });
   };
 
-  const removeHighlightToken = (id: string) => {
+  const removeHighlightToken = async (id: string) => {
     if (!profile) return;
+    const token = profile.highlights?.find((h) => h.id === id);
+    const confirmed = await confirm({
+      title: "Remove Highlight Token",
+      message: `Are you sure you want to remove token "${token?.phrase || "this token"}"?`,
+      confirmText: "Yes, Remove",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setProfile({
       ...profile,
       highlights: profile.highlights.filter((h) => h.id !== id),
     });
+    notify("Highlight token removed", "info");
   };
 
   const updateHighlightField = (

@@ -7,12 +7,12 @@ import {
   Plus,
   Trash2,
   Upload,
-  Trophy,
   CheckCircle,
-  ExternalLink,
 } from "lucide-react";
+import { useAdminConfirm } from "@/components/admin/AdminConfirmProvider";
 
 export default function AdminAwardsPage() {
+  const { confirm, notify } = useAdminConfirm();
   const [awards, setAwards] = useState<Award[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -45,10 +45,17 @@ export default function AdminAwardsPage() {
       });
       if (res.ok) {
         setSaveSuccess(true);
+        notify("Awards saved successfully!", "success");
         setTimeout(() => setSaveSuccess(false), 3000);
+      } else if (res.status === 401) {
+        notify("Session expired or unauthorized. Please re-login to save.", "error");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        notify(data.error || "Failed to save awards", "error");
       }
     } catch (err) {
       console.error("Failed to save awards", err);
+      notify("Network error: Failed to save awards", "error");
     } finally {
       setSaving(false);
     }
@@ -69,9 +76,18 @@ export default function AdminAwardsPage() {
     setAwards([newAward, ...awards]);
   };
 
-  const removeAward = (id: string) => {
-    if (!confirm("Are you sure you want to delete this award?")) return;
+  const removeAward = async (id: string) => {
+    const awardToDelete = awards.find((a) => a.id === id);
+    const confirmed = await confirm({
+      title: "Delete Award",
+      message: `Are you sure you want to delete "${awardToDelete?.title || "this award"}"? Click 'Save Awards' to commit changes.`,
+      confirmText: "Yes, Delete",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setAwards(awards.filter((a) => a.id !== id));
+    notify("Award removed from list", "info");
   };
 
   const updateAwardField = (id: string, field: keyof Award, value: unknown) => {

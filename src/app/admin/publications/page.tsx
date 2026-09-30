@@ -11,8 +11,10 @@ import {
   Image as ImageIcon,
   BookOpen,
 } from "lucide-react";
+import { useAdminConfirm } from "@/components/admin/AdminConfirmProvider";
 
 export default function AdminPublicationsPage() {
+  const { confirm, notify } = useAdminConfirm();
   const [publications, setPublications] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -62,10 +64,17 @@ export default function AdminPublicationsPage() {
       });
       if (res.ok) {
         setSaveSuccess(true);
+        notify("Publications saved successfully!", "success");
         setTimeout(() => setSaveSuccess(false), 3000);
+      } else if (res.status === 401) {
+        notify("Session expired or unauthorized. Please re-login to save.", "error");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        notify(data.error || "Failed to save publications", "error");
       }
     } catch (err) {
       console.error("Failed to save publications", err);
+      notify("Network error: Failed to save publications", "error");
     } finally {
       setSaving(false);
     }
@@ -89,11 +98,20 @@ export default function AdminPublicationsPage() {
     setActivePubId(newPub.id);
   };
 
-  const removePublication = (id: string) => {
-    if (!confirm("Are you sure you want to delete this publication?")) return;
+  const removePublication = async (id: string) => {
+    const pubToDelete = publications.find((p) => p.id === id);
+    const confirmed = await confirm({
+      title: "Delete Publication",
+      message: `Are you sure you want to delete "${pubToDelete?.title || "this publication"}"? Click 'Save Publications' to commit your changes.`,
+      confirmText: "Yes, Delete",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     const remaining = publications.filter((p) => p.id !== id);
     setPublications(remaining);
     if (remaining.length > 0) setActivePubId(remaining[0].id);
+    notify("Publication removed from list", "info");
   };
 
   const updateActiveField = (field: keyof Publication, value: unknown) => {
@@ -141,12 +159,21 @@ export default function AdminPublicationsPage() {
     }
   };
 
-  const removeFigure = (figIdx: number) => {
+  const removeFigure = async (figIdx: number) => {
     if (!activePub) return;
+    const confirmed = await confirm({
+      title: "Remove Figure Slide",
+      message: `Are you sure you want to remove figure slide #${figIdx + 1}?`,
+      confirmText: "Yes, Remove",
+      cancelText: "No, Keep",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     updateActiveField(
       "figures",
       activePub.figures.filter((_, idx) => idx !== figIdx)
     );
+    notify("Figure slide removed", "info");
   };
 
   if (loading) {
