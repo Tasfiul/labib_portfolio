@@ -69,11 +69,11 @@ export default function AdminAwardsPage() {
       issuedBy: "Awarding Body / Organization",
       description: "Description of the achievement and team role...",
       badgeText: "Honor Badge",
-      certificateUrl:
-        "https://images.unsplash.com/photo-1579548122080-c35fd6820ecb?auto=format&fit=crop&w=1200&q=85",
+      certificateUrl: "",
+      thumbnail: "",
       link: "",
     };
-    setAwards([newAward, ...awards]);
+    setAwards((prev) => [newAward, ...prev]);
   };
 
   const removeAward = async (id: string) => {
@@ -86,13 +86,19 @@ export default function AdminAwardsPage() {
       variant: "danger",
     });
     if (!confirmed) return;
-    setAwards(awards.filter((a) => a.id !== id));
+    setAwards((prev) => prev.filter((a) => a.id !== id));
     notify("Award removed from list", "info");
   };
 
+  const updateAwardFields = (id: string, updates: Partial<Award>) => {
+    setAwards((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, ...updates } : a))
+    );
+  };
+
   const updateAwardField = (id: string, field: keyof Award, value: unknown) => {
-    setAwards(
-      awards.map((a) => (a.id === id ? { ...a, [field]: value } : a))
+    setAwards((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, [field]: value } : a))
     );
   };
 
@@ -114,13 +120,20 @@ export default function AdminAwardsPage() {
       });
       const data = await res.json();
       if (res.ok && data.url) {
-        updateAwardField(awardId, "certificateUrl", data.url);
-        updateAwardField(awardId, "thumbnail", data.url);
+        updateAwardFields(awardId, {
+          certificateUrl: data.url,
+          thumbnail: data.url,
+        });
+        notify("Image uploaded successfully! Remember to click 'Save Awards' to commit changes.", "success");
+      } else {
+        notify(data.error || "Failed to upload image", "error");
       }
     } catch (err) {
       console.error("Certificate upload failed", err);
+      notify("Network error while uploading image", "error");
     } finally {
       setUploadingAwardId(null);
+      e.target.value = "";
     }
   };
 
@@ -269,7 +282,7 @@ export default function AdminAwardsPage() {
                   Certificate / Award Image (Sharp WebP Upload or URL)
                 </label>
                 <div className="flex items-center gap-2">
-                  <label className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-emerald-400 cursor-pointer flex items-center gap-1">
+                  <label className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-emerald-400 cursor-pointer flex items-center gap-1 flex-none">
                     <Upload className="w-3.5 h-3.5" />
                     <span>
                       {uploadingAwardId === award.id ? "Uploading..." : "Upload"}
@@ -285,11 +298,24 @@ export default function AdminAwardsPage() {
                     type="text"
                     value={award.certificateUrl || award.thumbnail || ""}
                     onChange={(e) => {
-                      updateAwardField(award.id, "certificateUrl", e.target.value);
-                      updateAwardField(award.id, "thumbnail", e.target.value);
+                      updateAwardFields(award.id, {
+                        certificateUrl: e.target.value,
+                        thumbnail: e.target.value,
+                      });
                     }}
+                    placeholder="Upload image or enter image URL..."
                     className="flex-1 px-3 py-2 rounded-lg border border-slate-800 bg-slate-950 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
                   />
+                  {(award.certificateUrl || award.thumbnail) && (
+                    <div className="relative w-10 h-8 rounded-lg overflow-hidden border border-slate-700 bg-slate-950 flex-none group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={award.certificateUrl || award.thumbnail}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 

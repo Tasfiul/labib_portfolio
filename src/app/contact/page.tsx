@@ -17,6 +17,7 @@ import {
 
 export default function ContactPage() {
   const [config, setConfig] = useState<SiteConfig | null>(null);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -29,8 +30,14 @@ export default function ContactPage() {
   useEffect(() => {
     fetch("/api/settings")
       .then((res) => res.json())
-      .then((data) => setConfig(data))
-      .catch((err) => console.error("Failed to load contact settings", err));
+      .then((data) => {
+        setConfig(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load contact settings", err);
+        setLoading(false);
+      });
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,9 +77,15 @@ export default function ContactPage() {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#1c2830] dark:text-white mt-1">
             Contact & Academic Inquiries
           </h1>
-          <p className="text-sm sm:text-base text-[#4a606a] dark:text-[#9bb0bb] mt-2 max-w-2xl">
-            {config?.contactIntro || "Feel free to reach out for research collaborations, STEM speaking engagements, or engineering consultations."}
-          </p>
+          {loading ? (
+            <div className="mt-3 space-y-2 max-w-2xl animate-pulse">
+              <div className="h-4 w-72 sm:w-96 bg-[#d6e2e6]/50 dark:bg-[#243640]/50 rounded" />
+            </div>
+          ) : config?.contactIntro ? (
+            <p className="text-sm sm:text-base text-[#4a606a] dark:text-[#9bb0bb] mt-2 max-w-2xl">
+              {config.contactIntro}
+            </p>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -183,62 +196,77 @@ export default function ContactPage() {
                 Contact Information
               </h2>
 
-              {/* Emails List */}
-              {config?.emails && config.emails.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm font-bold uppercase tracking-wider text-[#086972] dark:text-[#68b6c4]">
-                    Email Addresses
-                  </p>
-                  <div className="space-y-1.5">
-                    {config.emails.map((email, idx) => (
-                      <a
-                        key={idx}
-                        href={`mailto:${email}`}
-                        className="block text-base text-[#4a606a] dark:text-[#d0dee4] font-mono select-text hover:text-[#086972] dark:hover:text-[#68b6c4] transition-colors"
-                      >
-                        {email}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Phone Numbers List */}
-              {config?.phoneNumbers && config.phoneNumbers.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm font-bold uppercase tracking-wider text-[#086972] dark:text-[#68b6c4]">
-                    Phone / Mobile
-                  </p>
-                  <div className="space-y-1.5">
-                    {config.phoneNumbers.map((phone, idx) => (
-                      <p
-                        key={idx}
-                        className="block text-base text-[#4a606a] dark:text-[#d0dee4] font-mono select-text cursor-default"
-                      >
-                        {phone}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Addresses List */}
-              {config?.addresses && config.addresses.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm font-bold uppercase tracking-wider text-[#086972] dark:text-[#68b6c4]">
-                    Locations / Affiliations
-                  </p>
+              {loading ? (
+                <div className="space-y-6 animate-pulse py-2">
                   <div className="space-y-2">
-                    {config.addresses.map((addr, idx) => (
-                      <p
-                        key={idx}
-                        className="text-base text-[#4a606a] dark:text-[#d0dee4] leading-relaxed text-justify bg-[#f4f6f5] dark:bg-[#121a20] p-4 rounded-xl border border-[#d6e2e6] dark:border-[#243640]"
-                      >
-                        {addr}
-                      </p>
-                    ))}
+                    <div className="h-3 w-28 bg-[#d6e2e6]/60 dark:bg-[#243640]/60 rounded" />
+                    <div className="h-5 w-52 bg-[#d6e2e6]/40 dark:bg-[#243640]/40 rounded" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-3 w-24 bg-[#d6e2e6]/60 dark:bg-[#243640]/60 rounded" />
+                    <div className="h-5 w-40 bg-[#d6e2e6]/40 dark:bg-[#243640]/40 rounded" />
                   </div>
                 </div>
+              ) : (
+                <>
+                  {/* Emails List */}
+                  {config?.emails && config.emails.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-bold uppercase tracking-wider text-[#086972] dark:text-[#68b6c4]">
+                        Email Addresses
+                      </p>
+                      <div className="space-y-1.5">
+                        {config.emails.map((email, idx) => (
+                          <a
+                            key={idx}
+                            href={`mailto:${email}`}
+                            className="block text-base text-[#4a606a] dark:text-[#d0dee4] font-mono select-text hover:text-[#086972] dark:hover:text-[#68b6c4] transition-colors"
+                          >
+                            {email}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Phone Numbers List */}
+                  {config?.phoneNumbers && config.phoneNumbers.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-bold uppercase tracking-wider text-[#086972] dark:text-[#68b6c4]">
+                        Phone / Mobile
+                      </p>
+                      <div className="space-y-1.5">
+                        {config.phoneNumbers.map((phone, idx) => (
+                          <p
+                            key={idx}
+                            className="block text-base text-[#4a606a] dark:text-[#d0dee4] font-mono select-text cursor-default"
+                          >
+                            {phone}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Addresses List */}
+                  {config?.addresses && config.addresses.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-bold uppercase tracking-wider text-[#086972] dark:text-[#68b6c4]">
+                        Locations / Affiliations
+                      </p>
+                      <div className="space-y-2">
+                        {config.addresses.map((addr, idx) => (
+                          <p
+                            key={idx}
+                            className="text-base text-[#4a606a] dark:text-[#d0dee4] leading-relaxed text-justify bg-[#f4f6f5] dark:bg-[#121a20] p-4 rounded-xl border border-[#d6e2e6] dark:border-[#243640]"
+                          >
+                            {addr}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
