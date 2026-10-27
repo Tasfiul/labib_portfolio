@@ -786,6 +786,13 @@ export const initialSiteConfig: SiteConfig = {
     },
     {
       id: "soc-7",
+      platform: "Instagram",
+      url: "https://instagram.com",
+      iconName: "Instagram",
+      color: "#e1306c",
+    },
+    {
+      id: "soc-8",
       platform: "YouTube",
       url: "https://youtube.com",
       iconName: "Youtube",

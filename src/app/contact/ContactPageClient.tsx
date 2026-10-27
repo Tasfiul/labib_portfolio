@@ -252,7 +252,7 @@ export default function ContactPageClient({ config }: { config: SiteConfig }) {
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-[#086972] dark:text-[#68b6c4] group-hover:scale-110 transition-transform">
-                          <SocialIcon platform={item.platform} className="w-4 h-4" />
+                          <SocialIcon platform={item.platform} iconName={item.iconName} className="w-4 h-4" />
                         </span>
                         <span className="text-sm font-semibold text-[#1c2830] dark:text-[#f0f4f5] group-hover:text-[#086972] dark:group-hover:text-[#68b6c4]">
                           {item.platform}

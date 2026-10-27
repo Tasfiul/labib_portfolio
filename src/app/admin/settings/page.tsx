@@ -11,8 +11,22 @@ import {
   Phone,
   MapPin,
   Share2,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useAdminConfirm } from "@/components/admin/AdminConfirmProvider";
+import SocialIcon from "@/components/SocialIcon";
+
+const POPULAR_PLATFORMS = [
+  { name: "Instagram", url: "https://instagram.com/" },
+  { name: "Google Scholar", url: "https://scholar.google.com/" },
+  { name: "GitHub", url: "https://github.com/" },
+  { name: "LinkedIn", url: "https://linkedin.com/in/" },
+  { name: "ResearchGate", url: "https://researchgate.net/profile/" },
+  { name: "Facebook", url: "https://facebook.com/" },
+  { name: "X (Twitter)", url: "https://x.com/" },
+  { name: "YouTube", url: "https://youtube.com/" },
+];
 
 export default function AdminSettingsPage() {
   const { confirm, notify } = useAdminConfirm();
@@ -126,17 +140,27 @@ export default function AdminSettingsPage() {
   };
 
   // Social Links management
-  const addSocialLink = () => {
+  const addSocialLink = (preset?: { name: string; url: string }) => {
     if (!config) return;
     const newLink: SocialLink = {
       id: "soc-" + Date.now(),
-      platform: "New Platform",
-      url: "https://...",
+      platform: preset ? preset.name : "Instagram",
+      url: preset ? preset.url : "https://instagram.com/",
+      iconName: preset ? preset.name : "Instagram",
     };
     setConfig({
       ...config,
       socialLinks: [...(config.socialLinks || []), newLink],
     });
+  };
+  const moveSocialLink = (idx: number, direction: "up" | "down") => {
+    if (!config || !config.socialLinks) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= config.socialLinks.length) return;
+    const updated = [...config.socialLinks];
+    const [moved] = updated.splice(idx, 1);
+    updated.splice(targetIdx, 0, moved);
+    setConfig({ ...config, socialLinks: updated });
   };
   const updateSocialLink = (
     id: string,
@@ -378,7 +402,7 @@ export default function AdminSettingsPage() {
 
       {/* Standout Social / External Links */}
       <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
             <Share2 className="w-4 h-4 text-emerald-400" />
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">
@@ -387,37 +411,88 @@ export default function AdminSettingsPage() {
           </div>
           <button
             type="button"
-            onClick={addSocialLink}
-            className="text-xs text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+            onClick={() => addSocialLink()}
+            className="text-xs text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Social Link</span>
           </button>
         </div>
 
+        {/* Quick-add Platform Presets */}
+        <div className="flex items-center flex-wrap gap-1.5 pb-2">
+          <span className="text-[11px] font-mono text-slate-400 mr-1">Quick add:</span>
+          {POPULAR_PLATFORMS.filter(
+            (p) =>
+              !config.socialLinks?.some((s) =>
+                s.platform.toLowerCase().includes(p.name.toLowerCase().split(" ")[0])
+              )
+          ).map((preset) => (
+            <button
+              key={preset.name}
+              type="button"
+              onClick={() => addSocialLink(preset)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-xs text-slate-300 hover:text-white border border-slate-800 transition-colors cursor-pointer"
+            >
+              <SocialIcon platform={preset.name} className="w-3.5 h-3.5 text-emerald-400" />
+              <span>+ {preset.name}</span>
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {config.socialLinks?.map((item) => (
+          {config.socialLinks?.map((item, idx) => (
             <div
               key={item.id}
-              className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2"
+              className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5 shadow-sm"
             >
-              <div className="flex items-center justify-between">
-                <input
-                  type="text"
-                  placeholder="Platform Name (e.g. GitHub)"
-                  value={item.platform}
-                  onChange={(e) =>
-                    updateSocialLink(item.id, "platform", e.target.value)
-                  }
-                  className="font-bold text-xs text-white bg-slate-900 px-2 py-1 rounded border border-slate-800 focus:outline-none focus:border-emerald-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeSocialLink(item.id)}
-                  className="p-1 text-slate-500 hover:text-red-400"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div
+                    title={`Icon preview for ${item.platform || "Platform"}`}
+                    className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-400 shrink-0"
+                  >
+                    <SocialIcon platform={item.platform} iconName={item.iconName} className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    list="platform-suggestions"
+                    placeholder="Platform (e.g. Instagram)"
+                    value={item.platform}
+                    onChange={(e) =>
+                      updateSocialLink(item.id, "platform", e.target.value)
+                    }
+                    className="flex-1 font-bold text-xs text-white bg-slate-900 px-2 py-1 rounded border border-slate-800 focus:outline-none focus:border-emerald-500 min-w-0"
+                  />
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    disabled={idx === 0}
+                    onClick={() => moveSocialLink(idx, "up")}
+                    title="Move up"
+                    className="p-1 text-slate-500 hover:text-slate-300 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ArrowUp className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={idx === (config.socialLinks?.length || 0) - 1}
+                    onClick={() => moveSocialLink(idx, "down")}
+                    title="Move down"
+                    className="p-1 text-slate-500 hover:text-slate-300 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ArrowDown className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeSocialLink(item.id)}
+                    title="Remove"
+                    className="p-1 text-slate-500 hover:text-red-400 cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
               <input
@@ -425,11 +500,17 @@ export default function AdminSettingsPage() {
                 placeholder="URL (https://...)"
                 value={item.url}
                 onChange={(e) => updateSocialLink(item.id, "url", e.target.value)}
-                className="w-full text-xs text-emerald-400 bg-slate-900 px-2 py-1 rounded border border-slate-800 font-mono focus:outline-none focus:border-emerald-500"
+                className="w-full text-xs text-emerald-400 bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800 font-mono focus:outline-none focus:border-emerald-500"
               />
             </div>
           ))}
         </div>
+
+        <datalist id="platform-suggestions">
+          {POPULAR_PLATFORMS.map((p) => (
+            <option key={p.name} value={p.name} />
+          ))}
+        </datalist>
       </div>
 
       {/* Bottom Save Bar */}
