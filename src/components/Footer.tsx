@@ -51,6 +51,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   title={item.platform}
+                  aria-label={item.platform}
                   className="p-2.5 rounded-full border border-[#d6e2e6] dark:border-[#243640] bg-[#f4f6f5] dark:bg-[#18242b] text-[#4a606a] dark:text-[#9bb0bb] hover:text-[#086972] dark:hover:text-[#68b6c4] hover:border-[#086972]/40 dark:hover:border-[#68b6c4]/40 shadow-sm transition-all duration-200 hover:-translate-y-0.5"
                 >
                   <SocialIcon platform={item.platform} className="w-4 h-4" />
@@ -60,7 +61,7 @@ export default function Footer() {
           )}
 
           {/* Copyright & Info */}
-          <div className="text-xs text-[#768d97] dark:text-[#657e8c] text-center md:text-right flex items-center gap-1">
+          <div className="text-xs text-[#768d97] dark:text-[#9bb0bb] text-center md:text-right flex items-center gap-1">
             <span>{config?.footerText || "© 2026 Farhan Labib. All rights reserved."}</span>
           </div>
         </div>
