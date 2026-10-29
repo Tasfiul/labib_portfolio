@@ -57,6 +57,15 @@ function HighlightItem({
     isReady: false,
   });
 
+  const isTouchDevice = useCallback(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.matchMedia("(pointer: coarse)").matches ||
+      "ontouchstart" in window ||
+      navigator.maxTouchPoints > 0
+    );
+  }, []);
+
   const updatePosition = useCallback(() => {
     if (!itemRef.current) return;
     const rect = itemRef.current.getBoundingClientRect();
@@ -114,11 +123,15 @@ function HighlightItem({
   }, [isOpen, updatePosition]);
 
   const handleMouseEnter = () => {
+    // Only open on hover for fine-pointer (mouse) devices; ignore synthetic mouseenter on touch devices
+    if (isTouchDevice()) return;
     updatePosition();
     onOpen();
   };
 
   const handleMouseLeave = () => {
+    // Only close on hover for fine-pointer (mouse) devices
+    if (isTouchDevice()) return;
     onClose();
   };
 
@@ -139,10 +152,13 @@ function HighlightItem({
   return (
     <span
       ref={itemRef}
+      data-hoverable="true"
+      data-highlight-open={isOpen ? "true" : undefined}
       className={`relative inline-block ${isOpen ? "z-50" : "z-auto"}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+
       {matchToken.url ? (
         isExternalUrl ? (
           <a
@@ -216,10 +232,10 @@ function HighlightItem({
                       e.stopPropagation();
                       onCloseImmediate();
                     }}
-                    className="sm:hidden p-0.5 -mr-1 text-[#768d97] hover:text-[#1c2830] dark:hover:text-white rounded cursor-pointer"
+                    className="p-1 -mr-1 text-[#768d97] hover:text-[#1c2830] dark:hover:text-white rounded cursor-pointer"
                     aria-label="Close"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -260,7 +276,9 @@ function HighlightItem({
                             target="_blank"
                             rel="noopener noreferrer"
                             className={linkClasses}
-                            onClick={onCloseImmediate}
+                            onClick={() => {
+                              setTimeout(() => onCloseImmediate(), 150);
+                            }}
                           >
                             {itemContent}
                           </a>
@@ -268,7 +286,9 @@ function HighlightItem({
                           <Link
                             href={sub.url}
                             className={linkClasses}
-                            onClick={onCloseImmediate}
+                            onClick={() => {
+                              setTimeout(() => onCloseImmediate(), 150);
+                            }}
                           >
                             {itemContent}
                           </Link>
@@ -344,10 +364,15 @@ export default function InteractiveText({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
+      const target = e.target as Element | null;
+      if (!target) return;
+
+      // Close if tapped anywhere outside the currently open highlight (its trigger or popover)
+      const isInsideActiveHighlight = Boolean(
+        target.closest('[data-highlight-open="true"]')
+      );
+
+      if (!isInsideActiveHighlight) {
         cancelClose();
         setActiveKey(null);
       }

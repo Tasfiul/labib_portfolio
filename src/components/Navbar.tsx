@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/context/ThemeContext";
-import { Sun, Moon, GraduationCap, Menu, X } from "lucide-react";
+import { Sun, Moon, GraduationCap, Menu, X, Loader2 } from "lucide-react";
 
 const NAV_LINKS = [
   { name: "Home", href: "/" },
@@ -21,6 +21,7 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tappedLink, setTappedLink] = useState<string | null>(null);
   const [scholarUrl, setScholarUrl] = useState("https://scholar.google.com");
 
   useEffect(() => {
@@ -40,9 +41,10 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [pathname]);
 
-  // Close mobile menu on route change
+  // Close mobile menu and clear tapped link on route change
   useEffect(() => {
     setMobileMenuOpen(false);
+    setTappedLink(null);
   }, [pathname]);
 
   // If in admin page, don't show the public navbar
@@ -113,7 +115,8 @@ export default function Navbar() {
           <button
             onClick={toggleTheme}
             aria-label="Toggle dark/light mode"
-            className="p-2.5 rounded-full border border-[#d6e2e6] dark:border-[#243640] bg-white/80 dark:bg-[#18242b]/80 text-[#1c2830] dark:text-[#f0f4f5] hover:text-[#086972] dark:hover:text-[#68b6c4] transition-colors shadow-sm"
+            data-tap-circle="true"
+            className="p-2.5 rounded-full border border-[#d6e2e6] dark:border-[#243640] bg-white/80 dark:bg-[#18242b]/80 text-[#1c2830] dark:text-[#f0f4f5] hover:text-[#086972] dark:hover:text-[#68b6c4] transition-colors shadow-sm cursor-pointer"
           >
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
@@ -124,14 +127,19 @@ export default function Navbar() {
           <button
             onClick={toggleTheme}
             aria-label="Toggle theme"
-            className="p-2 rounded-lg text-[#1c2830] dark:text-[#f0f4f5] hover:bg-[#edf1f2] dark:hover:bg-[#1e2d36]"
+            data-tap-circle="true"
+            className="p-2 rounded-lg text-[#1c2830] dark:text-[#f0f4f5] hover:bg-[#edf1f2] dark:hover:bg-[#1e2d36] cursor-pointer"
           >
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Open menu"
-            className="p-2 rounded-lg text-[#1c2830] dark:text-[#f0f4f5] hover:bg-[#edf1f2] dark:hover:bg-[#1e2d36]"
+            onClick={() => {
+              setMobileMenuOpen(!mobileMenuOpen);
+              setTappedLink(null);
+            }}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            data-tap-circle="true"
+            className="p-2 rounded-lg text-[#1c2830] dark:text-[#f0f4f5] hover:bg-[#edf1f2] dark:hover:bg-[#1e2d36] cursor-pointer"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -140,24 +148,43 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-b border-[#d6e2e6] dark:border-[#243640] bg-white/95 dark:bg-[#121a20]/95 backdrop-blur-xl px-4 pt-2 pb-6 space-y-1 shadow-2xl">
+        <div data-mobile-menu="true" className="lg:hidden border-b border-[#d6e2e6] dark:border-[#243640] bg-white/95 dark:bg-[#121a20]/95 backdrop-blur-xl px-4 pt-2 pb-6 space-y-1 shadow-2xl">
           {NAV_LINKS.map((link) => {
             const isActive =
               link.href === "/"
                 ? pathname === "/"
                 : pathname.startsWith(link.href);
+            const isTapped = tappedLink === link.href;
 
             return (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`block px-4 py-3 rounded-lg text-base font-semibold transition-colors ${
-                  isActive
+                data-tap-circle="true"
+                onClick={() => {
+                  if (link.href === pathname) {
+                    setMobileMenuOpen(false);
+                  } else {
+                    setTappedLink(link.href);
+                  }
+                }}
+                className={`flex items-center justify-between px-4 py-3 rounded-xl text-base font-semibold transition-all duration-200 active:scale-[0.98] ${
+                  isTapped
+                    ? "bg-[#086972]/15 dark:bg-[#68b6c4]/20 text-[#086972] dark:text-[#68b6c4] ring-1 ring-[#086972]/40 dark:ring-[#68b6c4]/40 font-bold"
+                    : isActive
                     ? "bg-[#edf1f2] dark:bg-[#1e2d36] text-[#086972] dark:text-[#68b6c4]"
                     : "text-[#1c2830] dark:text-[#f0f4f5] hover:bg-[#edf1f2]/60 dark:hover:bg-[#1e2d36]/60"
                 }`}
               >
-                {link.name}
+                <span>{link.name}</span>
+                {isTapped ? (
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-[#086972] dark:text-[#68b6c4]">
+                    <span>Opening</span>
+                    <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+                  </span>
+                ) : isActive ? (
+                  <span className="w-2 h-2 rounded-full bg-[#086972] dark:bg-[#68b6c4]" />
+                ) : null}
               </Link>
             );
           })}
@@ -167,7 +194,8 @@ export default function Navbar() {
                 href={scholarUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[#086972] hover:bg-[#06535a] dark:bg-[#68b6c4] text-white dark:text-[#121a20] shadow-md"
+                data-tap-circle="true"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[#086972] hover:bg-[#06535a] dark:bg-[#68b6c4] text-white dark:text-[#121a20] shadow-md active:scale-95 transition-transform"
               >
                 <GraduationCap className="w-4 h-4" />
                 <span>Google Scholar</span>
